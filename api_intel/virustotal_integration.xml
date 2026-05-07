@@ -1,0 +1,6 @@
+<ossec_config>
+  <integration>
+    <name>virustotal</name>
+    <api_key>9e9f9d6185628a64ab388cd74af7057b4ca7e6a1d2c7f5524f86e25e6f07e0aa</api_key> <rule_id>100200, 100201</rule_id> <alert_format>json</alert_format>
+  </integration>
+</ossec_config>
