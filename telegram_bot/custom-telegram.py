@@ -42,11 +42,11 @@ def main():
     agent_name = alert_json.get('agent', {}).get('name', 'Wazuh Server')
     
     # Định dạng tin nhắn
-    msg = f"🚨 **WAZUH SOC ALERT** 🚨\n"
-    msg += f"**Level:** {level}\n"
-    msg += f"**Mô tả:** {description}\n"
-    msg += f"**Agent:** {agent_name}\n"
-    msg += f"**Rule ID:** {rule_id}\n"
+    msg = f"🚨 *WAZUH SOC ALERT* 🚨\n"
+    msg += f"*Level:* {level}\n"
+    msg += f"*Mô tả:* {description}\n"
+    msg += f"*Agent:* {agent_name}\n"
+    msg += f"*Rule ID:* {rule_id}\n"
     
     send_telegram_msg(msg)
 
