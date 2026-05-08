@@ -1,13 +1,11 @@
-<ossec_config>
-  <command>
+<command>
     <name>firewall-drop</name>
     <executable>firewall-drop</executable>
     <timeout_allowed>yes</timeout_allowed> </command>
 
   <active-response>
     <command>firewall-drop</command>
-    <location>local</location>
-    <rules_id>5716</rules_id> 
+    <location>local</location> <rules_id>5716, 31151</rules_id> 
+    
     <timeout>300</timeout> 
   </active-response>
-</ossec_config>
