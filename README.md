@@ -702,38 +702,80 @@ Windows: netsh advfirewall firewall add rule name="WAZUH_BLOCK_<IP>" dir=in acti
 ```
 ## Cấu trúc Repository
 ```
-|───manager
-|   ├───config
-|   ├───decoders
-|   └───rules
-|
 ├───agents
 │   ├───agent-linux
+│   │       ossec.conf          # /var/ossec/etc/ossec.conf — kết nối Manager, khai báo localfile auditd/syslog
+│   │       sysmonconfig.xml    # /etc/sysmon/sysmonconfig.xml — Sysmon for Linux, chức năng tương tự Sysmon trên Windows
 │   └───agent-windows
+│           ossec.conf          # C:\Program Files\ossec-agent\ossec.conf — kết nối Manager, đọc Sysmon Event Log, FIM paths
+│           sysmonconfig.xml    # C:\Windows\sysmonconfig.xml — filter Event ID 1/3/8/10/11/13/22, whitelist process hệ thống
+│
 ├───dashboard
+│       opensearch_dashboards.yml  # /etc/wazuh-dashboard/ — URL Indexer (9200), URL Manager API (55000), TLS config
+│
 ├───docs
 │   ├───architecture_diagram
+│   │       architecture.png    # Sơ đồ luồng dữ liệu Agent→Manager→Filebeat→Indexer→Dashboard
+│   │       IP-plan.png         # Bảng phân hoạch IP: Manager 0.11, Indexer 0.10, Dashboard 0.12, Agent Linux 0.141, Windows 0.171
+│   │
 │   ├───playbook
+│   │       incident-respone-playbook.docx  # Quy trình xử lý L1→L2→L3: Brute Force, FIM, Suspicious Process, IOC Match
+│   │
 │   └───report
 │       ├───report-overview
 │       │   ├───1-overview-project
+│       │   │       report-overview.docx      # Tổng quan dự án, kiến trúc, mục tiêu, phân công nhóm
+│       │   │
 │       │   ├───2-integration
+│       │   │       report-integration.docx   # Báo cáo tính năng AI: enrichment, Telegram, AbuseIPDB, VirusTotal, Active Response
+│       │   │
 │       │   ├───3-dashboard
+│       │   │       report-dashboard.docx     # Báo cáo Dashboard: field mapping, log sources, API Manager, visualization
+│       │   │
 │       │   ├───4-infrastructure
+│       │   │       report-infrastructure.docx  # Báo cáo hạ tầng: VM, network, Agent, Sysmon, FIM, Syslog
+│       │   │
 │       │   └───5-pentest
+│       │           report-pentest.docx       # Kết quả Red/Purple Team: alert coverage, gap analysis, rule cần bổ sung
+│       │
 │       └───report-task
 │           ├───khoadd-leader-manager
+│           │       report-task-manager.docx        # Task chi tiết Khoa: Manager, Decoder, Rules, MITRE, Correlation Query, Prompt Design
+│           │
 │           ├───nghiahhn-infrastructure
+│           │       report-task-infrastructure.docx  # Task chi tiết Nghĩa: VM, Indexer, Agent, Sysmon, FIM, Syslog, firewall
+│           │
 │           ├───thainvq-integration
+│           │       (report-task-integration.docx)   # Task chi tiết Thái: Telegram Bot, API Intel, AI Enrichment, Active Response
+│           │
 │           └───trongbd-dashboard
+│                   report-task-dashboard.docx       # Task chi tiết Trọng: Dashboard design, SOC workflow, Playbook, Demo
+│
 ├───indexer
-├───integrations
+│       jvm.options      # /etc/wazuh-indexer/jvm.options — JVM heap size (-Xms/-Xmx), không vượt 50% RAM vật lý
+│       opensearch.yml   # /etc/wazuh-indexer/opensearch.yml — cluster name, network host, TLS cert paths, port 9200/9300
+│
+└───integrations
     ├───abuseIPDB
+    │       api-intel-virustotal-abuseipdb.xml  # /var/ossec/etc/ossec.conf snippet — khai báo integration hook, rule ID trigger, API key
+    │       custom-abuseipdb.py                 # /var/ossec/integrations/ — tra cứu IP reputation AbuseIPDB API v2, output confidence_score vào alert JSON
+    │
     ├───active-respone
+    │       custom-quarantine.cmd  # Windows AR script — netsh advfirewall block IP, rollback sau 300s
+    │       custom-quarantine.py   # Linux AR script — iptables DROP + auto-unblock, whitelist private range và Manager IP
+    │
     ├───artifical-intelligence
-        └───src   
+    │   └───src
+    │           custom-telegram.py  # /var/ossec/integrations/ — pipeline chính: query OpenSearch chain→Threat Intel→Ollama AI→format 4-Block→Telegram Bot
+    │
     ├───telegram
+    │       api-intel-telegram.xml  # /var/ossec/etc/ossec.conf snippet — khai báo Telegram integration hook, level threshold trigger
+    │
     └───virustotal
+            api-intel-virustotal.xml  # /var/ossec/etc/ossec.conf snippet — khai báo VirusTotal integration hook, trigger khi FIM phát hiện file mới
+            virustotal                # /var/ossec/integrations/ — bash wrapper cũ (legacy), thay thế bởi virustotal.py
+            virustotal.py             # /var/ossec/integrations/ — lookup file hash SHA256 qua VirusTotal API v3, output positives/total vào alert JSON
+
  
 
 ```
