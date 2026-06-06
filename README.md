@@ -90,13 +90,13 @@ Dự án này được thực hiện trong khuôn khổ kỳ thực tập OJT SU
                                                  +-------------------------------+-------------------------------+
                                                  |                               |                               |
                                                  v                               v                               v
-                                      [ WAZUH DASHBOARD ]              [ AI PIPELINE ]                [ TELEGRAM BOT ]
-                                        192.168.0.12                   Llama 3.1 / Ollama              Kênh cảnh báo
-                                        Giao diện SOC analyst          TN1: Alert Enrichment           thời gian thực
-                                        Security Events                TN1+: Multi-Alert Corr.         4-Block UI/UX
-                                        MITRE Heatmap                  TN2: TI Summarization           Nút Approve/Reject
-                                        Discover / Visualize           TN3: Incident Report            Lệnh /query
-                                        Agent Management              TN4: Dynamic Playbook
+                                      [ WAZUH DASHBOARD ]              [ AI PIPELINE ]                      [ TELEGRAM BOT ]
+                                        192.168.0.12                   Llama 3.1 / Ollama                   Kênh cảnh báo thời gian thực
+                                        Giao diện SOC analyst          TN1: Alert Enrichment                4-Block UI/UX
+                                        Security Events                TN1+: Multi-Alert Correlation        Nút Approve/Reject    
+                                        MITRE Heatmap                  TN2: TI Summarization                Lệnh /query
+                                        Discover / Visualize           TN3: Incident Report            
+                                        Agent Management               TN4: Dynamic Playbook
                                                                        TN5: NL-to-DSL Query
                                                                        TN6: Gap Analysis
 ```
