@@ -1,1 +1,0 @@
-Chứa các script tự động hóa phòng ngự (ví dụ: tự động chặn IP kẻ tấn công trên firewall lab). Yêu cầu bắt buộc của các script trong này là phải có tính năng hoàn tác (chặn xong phải tự mở lại sau một khoảng thời gian) để không làm hỏng dữ liệu thật.
