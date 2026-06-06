@@ -700,7 +700,7 @@ Hỗ trợ đa hệ điều hành:
 Linux:   iptables -I INPUT -s <IP> -j DROP
 Windows: netsh advfirewall firewall add rule name="WAZUH_BLOCK_<IP>" dir=in action=block remoteip=<IP>
 ```
-
+## Cấu trúc Repository
 ```
 |───manager
 |   ├───config
