@@ -13,6 +13,7 @@ Phase 1 — Dự án thực tập | 06/05/2026 – 03/06/2026
 ---
 
 ## Mục lục
+
 - [Tổng quan dự án](#tổng-quan-dự-án)
 - [Kiến trúc hệ thống](#kiến-trúc-hệ-thống)
 - [IP Plan & Môi trường lab](#ip-plan--môi-trường-lab)
@@ -30,37 +31,19 @@ Phase 1 — Dự án thực tập | 06/05/2026 – 03/06/2026
 - [Tài liệu tham khảo](#tài-liệu-tham-khảo)
 
 ---
--  Tổng quan dự án
--  Kiến trúc hệ thống
--  IP Plan & Môi trường lab 
--  Công nghệ sử dụng 
--  Mô tả các thành phần 
--  Tính năng AI tích hợp 
--  Detection Engineering 
--  Automation & Active Response 
--  Cấu trúc Repository 
--  Hướng dẫn triển khai 
--  Kết quả kiểm thử xâm nhập 
--  Kết quả đạt được 
--  Thành viên nhóm 
--  Roadmap — Phase 2 
--  Tài liệu tham khảo 
-
----
 
 ## Tổng quan dự án
 
 Dự án xây dựng hệ thống SIEM (Security Information and Event Management) hoàn chỉnh dựa trên nền tảng Wazuh Distributed Architecture, được tăng cường bởi mô hình AI chạy nội bộ (Llama 3.1 qua Ollama) để tự động hóa quá trình phân tích cảnh báo và phản ứng sự cố.
 
 ### Vấn đề thực tiễn được giải quyết
-|-------------------------------|-------------------------------------------------------------------------------|------------------------------------------------|
-| Vấn đề                        | Giải pháp trong dự án                                                         | Kết quả đo được                                |
-|-------------------------------|-------------------------------------------------------------------------------|------------------------------------------------|
-| Phát hiện tấn công trễ        | Sysmon(Linux & Windows) + auditd(Linux) cung cấp telemetry ở tầng kernel      | Phát hiện trong vòng dưới 30 giây              |
-| SOC analyst bị quá tải        | AI phân tích, phân loại mức độ nghiêm trọng, mapping MITRE, đề xuất hành động | Giảm ~70% thời gian triage                     |
-| Phản ứng ch                   | Active Response tự động + Telegram cảnh báo thời gian thực                    | Thời gian phản ứng xuống dưới 15 giây          |
-| Cảnh báo đơn lẻ thiếu context | AI gom processGuid/parentPorcessGuid                                          | Bao phủ được nhiều kịch bản kill chain thực tế |
-|-------------------------------|-------------------------------------------------------------------------------|------------------------------------------------|
+
+| Vấn đề | Giải pháp trong dự án | Kết quả đo được |
+|---|---|---|
+| Phát hiện tấn công trễ — endpoint bị xâm phạm trước khi có cảnh báo | Sysmon (Windows) + Sysmon for Linux + auditd cung cấp telemetry ở tầng kernel | Phát hiện trong vòng dưới 30 giây |
+| SOC analyst bị quá tải với hàng nghìn cảnh báo mỗi ngày | AI tự động phân tích, phân loại mức độ nghiêm trọng, mapping MITRE, đề xuất hành động | Giảm ~70% thời gian triage |
+| Phản ứng chậm — 10–30 phút từ phát hiện đến chặn tấn công | Active Response tự động + Telegram cảnh báo thời gian thực | Thời gian phản ứng xuống dưới 15 giây |
+| Cảnh báo đơn lẻ thiếu ngữ cảnh để hiểu chuỗi tấn công | AI gom ProcessGuid/PID chain, tái tạo toàn bộ timeline tấn công | Bao phủ được nhiều kịch bản kill chain thực tế |
 
 ### Phạm vi Phase 1
 
@@ -83,39 +66,39 @@ Dự án xây dựng hệ thống SIEM (Security Information and Event Managemen
 ```
 [ NGUỒN LOG ]
       |
-      +-- Windows Agent (192.168.0.171)     Sysmon + FIM + auditd  ---|
+      +-- Windows Agent (192.168.0.171)     Sysmon + FIM + auditd  --|
       |                                                               |
-      +-- Linux Agent (192.168.0.141)       Sysmon for Linux + FIM ---|-- TCP 1514
-      |                                     + auditd                  |
-      +-- Syslog Gateway (192.168.0.100)    Router/Firewall        ---|-- UDP 514
+      +-- Linux Agent (192.168.0.141)       Sysmon for Linux + FIM --|-- TCP 1514
+      |                                     + auditd                 |
+      +-- Syslog Gateway (192.168.0.100)    Router/Firewall       ---|-- UDP 514
                                                                       |
                                                                       v
-                                                                WAZUH MANAGER ]
-                                                                192.168.0.11
-                                                             Decode -> Rule Engine
-                                                                Alert Generation
-                                                                Active Response
-                                                                       |
-                                                              Filebeat (HTTPS port 9200)
-                                                                       |
-                                                                       v
-                                                                [ WAZUH INDEXER ]
-                                                                  192.168.0.10
-                                                                  OpenSearch 2.x
-                                                              Lưu trữ alert theo ngày
-                                                                       |
-                                       +-------------------------------+-------------------------------+
-                                       |                               |                               |
-                                       v                               v                               v
-                              [ WAZUH DASHBOARD ]              [ AI PIPELINE ]                [ TELEGRAM BOT ]
-                                192.168.0.12                   Llama 3.1 / Ollama              Kênh cảnh báo
-                              Giao diện SOC analyst          TN1: Alert Enrichment           thời gian thực
-                              Security Events                TN1+: Multi-Alert Corr.         4-Block UI/UX
-                              MITRE Heatmap                  TN2: TI Summarization           Nút Approve/Reject
-                              Discover / Visualize           TN3: Incident Report            Lệnh /query
-                               Agent Management              TN4: Dynamic Playbook
-                                                             TN5: NL-to-DSL Query
-                                                             TN6: Gap Analysis
+                                                        [ WAZUH MANAGER ]
+                                                          192.168.0.11
+                                                          Decode -> Rule Engine
+                                                          Alert Generation
+                                                          Active Response
+                                                               |
+                                                    Filebeat (HTTPS port 9200)
+                                                               |
+                                                               v
+                                                        [ WAZUH INDEXER ]
+                                                          192.168.0.10
+                                                          OpenSearch 2.x
+                                                          Lưu trữ alert theo ngày
+                                                               |
+                               +-------------------------------+-------------------------------+
+                               |                               |                               |
+                               v                               v                               v
+                    [ WAZUH DASHBOARD ]              [ AI PIPELINE ]                [ TELEGRAM BOT ]
+                      192.168.0.12                   Llama 3.1 / Ollama              Kênh cảnh báo
+                      Giao diện SOC analyst          TN1: Alert Enrichment           thời gian thực
+                      Security Events                TN1+: Multi-Alert Corr.         4-Block UI/UX
+                      MITRE Heatmap                  TN2: TI Summarization           Nút Approve/Reject
+                      Discover / Visualize           TN3: Incident Report            Lệnh /query
+                      Agent Management              TN4: Dynamic Playbook
+                                                     TN5: NL-to-DSL Query
+                                                     TN6: Gap Analysis
 ```
 
 ### Luồng dữ liệu chi tiết
@@ -149,40 +132,40 @@ Alert rule.level >= 12 -> Telegram thông báo analyst
 ---
 
 ## IP Plan & Môi trường lab
-|-----------------|---------------|---------------------|------|----------------------------------------------------|
-| Node            | Địa chỉ IP    | Hệ điều hành        | RAM  | Vai trò                                            |
-|-----------------|---------------|---------------------|------|----------------------------------------------------|
-| Wazuh Manager   | 192.168.0.11  | Ubuntu Server 22.04 | 8GB  | Xử lý log, rule engine, REST API                   |
-| Wazuh Indexer   | 192.168.0.10  | Ubuntu Server 22.04 | 8GB  | Lưu trữ OpenSearch, query engine                   |
-| Wazuh Dashboard | 192.168.0.12  | Ubuntu Server 22.04 | 8GB  | Giao diện web (cùng máy với Indexer)               |
-| Windows Victim  | 192.168.0.171 | Windows 10/11       | 8GB  | Endpoint + Wazuh Agent + Sysmon                    |
-| Linux Victim    | 192.168.0.141 | Ubuntu 22.04        | 8GB  | Endpoint + Wazuh Agent + Sysmon for Linux + auditd |
-| Kali Attacker   | 192.168.0.168 | Kali Linux 2024     | 16GB | Red Team — không cài Agent                         |
-| Gateway         | 192.168.0.100 | Router/Firewall     | 8GB  | Nguồn Syslog, giả lập thiết bị mạng                |
-|-----------------|---------------|---------------------|------|----------------------------------------------------|
+
+| Node | Địa chỉ IP | Hệ điều hành | RAM | Vai trò |
+|---|---|---|---|---|
+| Wazuh Manager | 192.168.0.11 | Ubuntu Server 22.04 | 4GB | Xử lý log, rule engine, REST API |
+| Wazuh Indexer | 192.168.0.10 | Ubuntu Server 22.04 | 8GB | Lưu trữ OpenSearch, query engine |
+| Wazuh Dashboard | 192.168.0.12 | Ubuntu Server 22.04 | — | Giao diện web (cùng máy với Indexer) |
+| Windows Victim | 192.168.0.171 | Windows 10/11 | 4GB | Endpoint + Wazuh Agent + Sysmon |
+| Linux Victim | 192.168.0.141 | Ubuntu 22.04 | 2GB | Endpoint + Wazuh Agent + Sysmon for Linux + auditd |
+| Kali Attacker | 192.168.0.168 | Kali Linux 2024 | 4GB | Red Team — không cài Agent |
+| Gateway | 192.168.0.100 | Router/Firewall | — | Nguồn Syslog, giả lập thiết bị mạng |
+
+Mạng LAN nội bộ với router riêng của nhóm để tránh xung đột IP. ZeroTier overlay sẵn sàng cho trường hợp các máy khác mạng.
 
 ---
 
 ## Công nghệ sử dụng
-|------------------|----------------------------|----------------|--------------------------------------------------------|
-|       Tầng       |        Công nghệ           |    Phiên bản   |                     Mục đích                           |
-|------------------|----------------------------|----------------|--------------------------------------------------------|
-| SIEM Core        | Wazuh Manager              | v4.14.5        | Nhận log, giải mã, rule engine, sinh cảnh báo          |
-| Khung phân loại  | MITRE ATT&CK               | Enterprise v14 | Mapping kỹ thuật tấn công vào rule                     |
-| Lưu trữ          | Wazuh Indexer (OpenSearch) | 2.x            | Lưu trữ alert, DSL query, aggregation                  |
-| Giao diện        | Wazuh Dashboard            | v4.7.5         | Web UI, MITRE heatmap, Discover, visualization         |
-| Log Shipper      | Filebeat                   | 8.x            | Pipeline Manager -> Indexer                            |
-| Giám sát Windows | Sysmon (Sysinternals)      | v15.x          | Sự kiện kernel-level: process, network, file, registry |
-| Giám sát Linux   | Sysmon for Linux           | v15.x          | Giám sát kernel-level tương đương Sysmon Windows       |
-| Giám sát Linux   | auditd                     | 3.x            | Kiểm tra syscall: execve, connect, open                |
-| Mô hình AI       | Llama 3.1 via Ollama       | 8B             | LLM chạy nội bộ — 100% offline, không rò rỉ dữ liệu    |
-| Tự động hóa      | Python                     | 3.10+          | AI pipeline, gọi API, Telegram, Active Response        |
-| Threat Intel     | AbuseIPDB API v2           |        —       | Tra cứu điểm uy tín IP                                 |
-| Threat Intel     | VirusTotal API v3          |        —       | Tra cứu hash file, xác định dòng mã độc                |
-| Cảnh báo         | Telegram Bot API           |        —       | Thông báo analyst thời gian thực                       |
-| Ngôn ngữ query   | OpenSearch DSL             |        —       | Gom chuỗi ProcessGuid/PID, threat hunting              |
-| Ngôn ngữ decoder | PCRE2 Regex                |        —       | Custom decoder, trích xuất field                       |
-|------------------|----------------------------|----------------|--------------------------------------------------------|
+
+| Tầng | Công nghệ | Phiên bản | Mục đích |
+|---|---|---|---|
+| SIEM Core | Wazuh Manager | v4.14.5 | Nhận log, giải mã, rule engine, sinh cảnh báo |
+| Lưu trữ | Wazuh Indexer (OpenSearch) | 2.x | Lưu trữ alert, DSL query, aggregation |
+| Giao diện | Wazuh Dashboard | v4.7.5 | Web UI, MITRE heatmap, Discover, visualization |
+| Log Shipper | Filebeat | 8.x | Pipeline Manager -> Indexer |
+| Giám sát Windows | Sysmon (Sysinternals) | v15.x | Sự kiện kernel-level: process, network, file, registry |
+| Giám sát Linux (1) | Sysmon for Linux | v15.x | Giám sát kernel-level tương đương Sysmon Windows |
+| Giám sát Linux (2) | auditd | 3.x | Kiểm tra syscall: execve, connect, open |
+| Mô hình AI | Llama 3.1 via Ollama | 8B | LLM chạy nội bộ — 100% offline, không rò rỉ dữ liệu |
+| Tự động hóa | Python | 3.10+ | AI pipeline, gọi API, Telegram, Active Response |
+| Threat Intel | AbuseIPDB API v2 | — | Tra cứu điểm uy tín IP |
+| Threat Intel | VirusTotal API v3 | — | Tra cứu hash file, xác định dòng mã độc |
+| Cảnh báo | Telegram Bot API | — | Thông báo analyst thời gian thực |
+| Ngôn ngữ query | OpenSearch DSL | — | Gom chuỗi ProcessGuid/PID, threat hunting |
+| Ngôn ngữ decoder | PCRE2 Regex | — | Custom decoder, trích xuất field |
+| Khung phân loại | MITRE ATT&CK | Enterprise v14 | Mapping kỹ thuật tấn công vào rule |
 
 ---
 
@@ -242,17 +225,15 @@ Giao diện web dành cho SOC analyst, xây dựng trên OpenSearch Dashboards.
 
 Sysmon là driver Windows của Microsoft Sysinternals, hoạt động ở kernel mode, ghi nhận sự kiện hệ thống với độ chi tiết vượt xa Windows Event Log mặc định.
 
-|----------|--------------------|----------------------------------------------------------------------------------|
-| Event ID | Tên sự kiện        |                         Phát hiện gì                                             |
-|----------|--------------------|----------------------------------------------------------------------------------|
-| 1        | ProcessCreate      | Mọi process được tạo: image, commandLine, parentImage, processGuid, hash         |
-| 3        | NetworkConnection  | Kết nối TCP/UDP ra ngoài: destinationIp, destinationPort — phát hiện C2 callback |
-| 8        | CreateRemoteThread | Tiêm code vào process khác qua API CreateRemoteThread — T1055                    |
-| 10       | ProcessAccess      | Process đọc bộ nhớ process khác — phát hiện dump LSASS — T1003                   |
-| 11       | FileCreate         | File mới được tạo: targetFilename — phát hiện payload drop vào Temp              |
-| 13       | RegistryValueSet   | Ghi vào registry — phát hiện persistence qua Run key — T1547                     |
-| 22       | DNSEvent           | DNS query — phát hiện DGA, DNS-based C2, domain fronting                         |
-|----------|--------------------|----------------------------------------------------------------------------------|
+| Event ID | Tên sự kiện | Phát hiện gì |
+|---|---|---|
+| 1 | ProcessCreate | Mọi process được tạo: image, commandLine, parentImage, processGuid, hash |
+| 3 | NetworkConnection | Kết nối TCP/UDP ra ngoài: destinationIp, destinationPort — phát hiện C2 callback |
+| 8 | CreateRemoteThread | Tiêm code vào process khác qua API CreateRemoteThread — T1055 |
+| 10 | ProcessAccess | Process đọc bộ nhớ process khác — phát hiện dump LSASS — T1003 |
+| 11 | FileCreate | File mới được tạo: targetFilename — phát hiện payload drop vào Temp |
+| 13 | RegistryValueSet | Ghi vào registry — phát hiện persistence qua Run key — T1547 |
+| 22 | DNSEvent | DNS query — phát hiện DGA, DNS-based C2, domain fronting |
 
 ### Sysmon for Linux — Giám sát Linux tầng kernel (ubuntu-admin)
 
@@ -312,15 +293,14 @@ Thư mục được giám sát:
   Linux:   /etc, /bin, /sbin, /usr/bin, /tmp (realtime)
   Windows: %WINDIR%\System32, %WINDIR%\Temp, %PROGRAMDATA%
 ```
-|------------------------|-----------------------------------------------------------|
-| Field trong FIM Alert  |                     Ý nghĩa                               |
-|------------------------|-----------------------------------------------------------|
-| syscheck.path          | Đường dẫn đầy đủ file bị thay đổi                         |
-| syscheck.event         | Loại thay đổi: added / modified / deleted                 |
-| syscheck.sha256_before | Hash trước khi thay đổi                                   |
-| syscheck.sha256_after  | Hash sau khi thay đổi — dùng để tra cứu VirusTotal        |
-| syscheck.mtime_after   | Thời điểm sửa đổi — phát hiện timestomping nếu bất thường |
-|------------------------|-----------------------------------------------------------|
+
+| Field trong FIM Alert | Ý nghĩa |
+|---|---|
+| syscheck.path | Đường dẫn đầy đủ file bị thay đổi |
+| syscheck.event | Loại thay đổi: added / modified / deleted |
+| syscheck.sha256_before | Hash trước khi thay đổi |
+| syscheck.sha256_after | Hash sau khi thay đổi — dùng để tra cứu VirusTotal |
+| syscheck.mtime_after | Thời điểm sửa đổi — phát hiện timestomping nếu bất thường |
 
 ### Syslog — Giám sát thiết bị mạng
 
