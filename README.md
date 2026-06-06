@@ -34,7 +34,7 @@ Phase 1 — Dự án thực tập | 06/05/2026 – 03/06/2026
 
 ## Tổng quan dự án
 
-Dự án xây dựng hệ thống SIEM (Security Information and Event Management) hoàn chỉnh dựa trên nền tảng Wazuh Distributed Architecture, được tăng cường bởi mô hình AI chạy nội bộ (Llama 3.1 qua Ollama) để tự động hóa quá trình phân tích cảnh báo và phản ứng sự cố.
+Dự án này được thực hiện trong khuôn khổ kỳ thực tập OJT SU26 tại Đại học FPT, dưới sự định hướng và hỗ trợ chuyên môn của anh Phạm Ngọc Chánh(Trưởng phòng (Phòng Hạ tầng số Sở KH & CN Vĩnh Long)). Mục tiêu cốt lõi của dự án là xây dựng một hệ thống SIEM (Security Information and Event Management) toàn diện dựa trên kiến trúc phân tán Wazuh (Wazuh Distributed Architecture). Điểm nhấn kỹ thuật của hệ thống là việc tích hợp mô hình ngôn ngữ lớn triển khai cục bộ (Llama 3.1 vận hành qua Ollama), nhằm tối ưu hóa và tự động hóa quy trình phân tích cảnh báo cũng như phản ứng sự cố an toàn thông tin.
 
 ### Vấn đề thực tiễn được giải quyết
 
@@ -794,7 +794,7 @@ Mỗi máy cần:
 - Ollama với Llama 3.1:8b (cho AI nội bộ)
 ```
 
-### 1. Cài Wazuh Manager (máy Khoa — 192.168.0.11)
+### 1. Cài Wazuh Manager (192.168.0.11)
 
 ```bash
 curl -sO https://packages.wazuh.com/4.14/wazuh-install.sh
@@ -805,7 +805,7 @@ sudo systemctl status filebeat
 sudo filebeat test output
 ```
 
-### 2. Cài Wazuh Indexer (máy Nghĩa — 192.168.0.10)
+### 2. Cài Wazuh Indexer (192.168.0.10)
 
 ```bash
 bash wazuh-install.sh --wazuh-indexer wazuh-1 -i
@@ -814,14 +814,14 @@ curl -sk -u admin:${ADMIN_PASS} "https://localhost:9200/_cluster/health?pretty"
 curl -sk -u admin:${ADMIN_PASS} "https://localhost:9200/_cat/indices/wazuh-alerts-*?v"
 ```
 
-### 3. Cài Wazuh Dashboard (máy Nghĩa — 192.168.0.12)
+### 3. Cài Wazuh Dashboard (192.168.0.12)
 
 ```bash
 bash wazuh-install.sh --wazuh-dashboard wazuh-1 -i
 # Truy cập: https://192.168.0.12
 ```
 
-### 4. Triển khai Custom Decoder & Rules (máy Khoa)
+### 4. Triển khai Custom Decoder & Rules
 
 ```bash
 sudo cp manager/decoders/local_decoder.xml /var/ossec/etc/decoders/
