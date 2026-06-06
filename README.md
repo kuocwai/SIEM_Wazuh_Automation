@@ -731,7 +731,7 @@ Windows: netsh advfirewall firewall add rule name="WAZUH_BLOCK_<IP>" dir=in acti
     ├───abuseIPDB
     ├───active-respone
     ├───artifical-intelligence
-    ├───src
+        └───src   
     ├───telegram
     └───virustotal
  
