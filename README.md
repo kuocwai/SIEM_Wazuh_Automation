@@ -66,39 +66,39 @@ Dự án xây dựng hệ thống SIEM (Security Information and Event Managemen
 ```
 [ NGUỒN LOG ]
       |
-      +-- Windows Agent (192.168.0.171)     Sysmon + FIM + auditd  --|
-      |                                                               |
-      +-- Linux Agent (192.168.0.141)       Sysmon for Linux + FIM --|-- TCP 1514
-      |                                     + auditd                 |
-      +-- Syslog Gateway (192.168.0.100)    Router/Firewall       ---|-- UDP 514
-                                                                      |
-                                                                      v
-                                                        [ WAZUH MANAGER ]
-                                                          192.168.0.11
-                                                          Decode -> Rule Engine
-                                                          Alert Generation
-                                                          Active Response
-                                                               |
-                                                    Filebeat (HTTPS port 9200)
-                                                               |
-                                                               v
-                                                        [ WAZUH INDEXER ]
-                                                          192.168.0.10
-                                                          OpenSearch 2.x
-                                                          Lưu trữ alert theo ngày
-                                                               |
-                               +-------------------------------+-------------------------------+
-                               |                               |                               |
-                               v                               v                               v
-                    [ WAZUH DASHBOARD ]              [ AI PIPELINE ]                [ TELEGRAM BOT ]
-                      192.168.0.12                   Llama 3.1 / Ollama              Kênh cảnh báo
-                      Giao diện SOC analyst          TN1: Alert Enrichment           thời gian thực
-                      Security Events                TN1+: Multi-Alert Corr.         4-Block UI/UX
-                      MITRE Heatmap                  TN2: TI Summarization           Nút Approve/Reject
-                      Discover / Visualize           TN3: Incident Report            Lệnh /query
-                      Agent Management              TN4: Dynamic Playbook
-                                                     TN5: NL-to-DSL Query
-                                                     TN6: Gap Analysis
+      +-- Windows Agent (192.168.0.171)     Sysmon + FIM + auditd              ---|
+      |                                                                           |
+      +-- Linux Agent (192.168.0.141)       Sysmon for Linux + FIM + auditd    ---|-- TCP 1514
+      |                                                                           |
+      +-- Syslog Gateway (192.168.0.100)    Router/Firewall                    ---|-- UDP 514
+                                                                                  |
+                                                                                  v
+                                                                          [ WAZUH MANAGER ]
+                                                                            192.168.0.11
+                                                                            Decode -> Rule Engine
+                                                                            Alert Generation
+                                                                            Active Response
+                                                                                 |
+                                                                      Filebeat (HTTPS port 9200)
+                                                                                 |
+                                                                                 v
+                                                                          [ WAZUH INDEXER ]
+                                                                            192.168.0.10
+                                                                            OpenSearch 2.x
+                                                                            Lưu trữ alert theo ngày
+                                                                                 |
+                                                 +-------------------------------+-------------------------------+
+                                                 |                               |                               |
+                                                 v                               v                               v
+                                      [ WAZUH DASHBOARD ]              [ AI PIPELINE ]                [ TELEGRAM BOT ]
+                                        192.168.0.12                   Llama 3.1 / Ollama              Kênh cảnh báo
+                                        Giao diện SOC analyst          TN1: Alert Enrichment           thời gian thực
+                                        Security Events                TN1+: Multi-Alert Corr.         4-Block UI/UX
+                                        MITRE Heatmap                  TN2: TI Summarization           Nút Approve/Reject
+                                        Discover / Visualize           TN3: Incident Report            Lệnh /query
+                                        Agent Management              TN4: Dynamic Playbook
+                                                                       TN5: NL-to-DSL Query
+                                                                       TN6: Gap Analysis
 ```
 
 ### Luồng dữ liệu chi tiết
@@ -331,26 +331,26 @@ Nguyên tắc tích hợp AI:
 Wazuh Alert (JSON)
         |
         v
-+------------------------------------------------------+
++-------------------------------------------------------+
 |                    AI PIPELINE                        |
 |                                                       |
-| Bước 1: Trích xuất ProcessGuid (Windows) / PID(Linux)|
+| Bước 1: Trích xuất ProcessGuid (Windows) / PID(Linux) |
 |          -> OpenSearch DSL query gom chuỗi sự kiện    |
 |                                                       |
 | Bước 2: Làm giàu Threat Intelligence                  |
 |          -> AbuseIPDB (điểm uy tín IP)                |
-|          -> VirusTotal (hash file, dòng mã độc)        |
+|          -> VirusTotal (hash file, dòng mã độc)       |
 |                                                       |
-| Bước 3: Phân tích AI nội bộ (Llama 3.1 / Ollama)     |
-|          Đầu vào:  chuỗi sự kiện JSON + dữ liệu TI    |
-|          Đầu ra:   severity, MITRE, narrative, actions |
+| Bước 3: Phân tích AI nội bộ (Llama 3.1 / Ollama)      |
+|          Đầu vào: chuỗi sự kiện JSON + dữ liệu TI     |
+|          Đầu ra:  severity, MITRE, narrative, actions |
 |                                                       |
 | Bước 4: Sinh Incident Report                          |
 |          -> /var/ossec/reports/incidents/INC-*.json   |
 |                                                       |
 | Bước 5: Telegram 4-Block + nút Approve/Reject         |
-|          -> Analyst quyết định -> Active Response      |
-+------------------------------------------------------+
+|          -> Analyst quyết định -> Active Response     |
++-------------------------------------------------------+
 ```
 
 ### TN1: AI Alert Enrichment — Làm giàu ngữ cảnh cảnh báo (HOÀN THÀNH)
@@ -701,74 +701,42 @@ Linux:   iptables -I INPUT -s <IP> -j DROP
 Windows: netsh advfirewall firewall add rule name="WAZUH_BLOCK_<IP>" dir=in action=block remoteip=<IP>
 ```
 
----
-
-## Cấu trúc Repository
+```
+|───manager
+|   ├───config
+|   ├───decoders
+|   └───rules
+|
+├───agents
+│   ├───agent-linux
+│   └───agent-windows
+├───dashboard
+├───docs
+│   ├───architecture_diagram
+│   ├───playbook
+│   └───report
+│       ├───report-overview
+│       │   ├───1-overview-project
+│       │   ├───2-integration
+│       │   ├───3-dashboard
+│       │   ├───4-infrastructure
+│       │   └───5-pentest
+│       └───report-task
+│           ├───khoadd-leader-manager
+│           ├───nghiahhn-infrastructure
+│           ├───thainvq-integration
+│           └───trongbd-dashboard
+├───indexer
+├───integrations
+    ├───abuseIPDB
+    ├───active-respone
+    ├───artifical-intelligence
+    ├───src
+    ├───telegram
+    └───virustotal
+ 
 
 ```
-wazuh-siem-lab/
-|
-|-- README.md
-|
-|-- docs/                              # Tài liệu dự án
-|   |-- Architecture_Diagram.png      # Sơ đồ kiến trúc hệ thống
-|   |-- SOC_Playbooks.md              # Playbook xử lý sự cố
-|   `-- Pentest_Report.pdf            # Báo cáo kiểm thử xâm nhập
-|
-|-- manager/                           # Máy Khoa — 192.168.0.11 (Wazuh Manager)
-|   |-- ossec.conf                     # /var/ossec/etc/ossec.conf [đã ẩn thông tin nhạy cảm]
-|   |-- decoders/
-|   |   `-- local_decoder.xml          # /var/ossec/etc/decoders/local_decoder.xml
-|   |-- rules/
-|   |   `-- local_rules.xml            # /var/ossec/etc/rules/local_rules.xml
-|   |-- integrations/
-|   |   |-- custom-telegram.py         # /var/ossec/integrations/custom-telegram
-|   |   |-- custom-abuseipdb.py        # /var/ossec/integrations/custom-abuseipdb
-|   |   `-- custom-virustotal.py       # /var/ossec/integrations/custom-virustotal
-|   `-- filebeat.yml                   # /etc/filebeat/filebeat.yml [đã ẩn thông tin nhạy cảm]
-|
-|-- indexer/                           # Máy Nghĩa — 192.168.0.10 (Wazuh Indexer)
-|   |-- opensearch.yml                 # /etc/wazuh-indexer/opensearch.yml [đã ẩn thông tin nhạy cảm]
-|   `-- jvm.options                    # /etc/wazuh-indexer/jvm.options
-|
-|-- dashboard/                         # Máy Nghĩa — 192.168.0.12 (Wazuh Dashboard)
-|   `-- opensearch_dashboards.yml      # /etc/wazuh-dashboard/opensearch_dashboards.yml [đã ẩn thông tin nhạy cảm]
-|
-|-- agent-linux/                       # Ubuntu Agent — 192.168.0.141
-|   |-- ossec.conf                     # /var/ossec/etc/ossec.conf
-|   `-- audit/
-|       `-- lab.rules                  # /etc/audit/rules.d/lab.rules
-|
-|-- agent-windows/                     # Windows Agent — 192.168.0.171
-|   |-- ossec.conf                     # C:\Program Files (x86)\ossec-agent\ossec.conf
-|   |-- sysmonconfig-windows.xml       # C:\Windows\sysmonconfig.xml (Sysmon Windows)
-|   `-- sysmonconfig-linux.xml         # /etc/sysmon/config.xml (Sysmon for Linux)
-|
-|-- src/
-|   `-- correlation.py                 # Hàm get_process_chain() — query OpenSearch
-|
-|-- prompts/
-|   |-- enrichment_v1.py               # TN1: System prompt + build_enrichment_prompt()
-|   `-- ti_prompt.txt                  # TN2: Prompt sinh verdict Threat Intelligence
-|
-|-- schema/
-|   `-- incident_schema.json           # TN3: Định nghĩa cấu trúc 10 trường Incident Report
-|                                      #      Dùng để validate đầu ra AI trước khi lưu file
-|
-|-- queries/
-|   |-- sysmon_process_chain.json      # DSL query gom chuỗi ProcessGuid (Windows)
-|   `-- auditd_pid_chain.json          # DSL query gom chuỗi PID (Linux)
-|
-|-- scripts/
-|   `-- backup_wazuh_config.sh         # Script backup cấu hình sau mỗi mốc hoàn thành
-|
-|-- tests/
-|   `-- test_enrichment_manual.py      # Kiểm thử thủ công 3 kịch bản: C2/FIM/Injection
-|
-`-- .gitignore
-```
-
----
 
 ## Hướng dẫn triển khai
 
