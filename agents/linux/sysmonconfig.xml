@@ -1,0 +1,33 @@
+<Sysmon schemaversion="4.81">
+  <EventFiltering>
+
+    <ProcessCreate onmatch="exclude">
+      <Image condition="is">/usr/bin/top</Image>
+      <Image condition="is">/usr/bin/ps</Image>
+      <Image condition="is">/bin/grep</Image>
+      <Image condition="is">/bin/sed</Image>
+      <Image condition="is">/bin/awk</Image>
+      <Image condition="contains">/var/ossec/bin/</Image>
+      <Image condition="is">/opt/sysmon/sysmon</Image>
+    </ProcessCreate>
+
+    <NetworkConnect onmatch="exclude">
+      <DestinationIp condition="is">127.0.0.1</DestinationIp>
+      <DestinationIp condition="is">::1</DestinationIp>
+      <DestinationIp condition="is">10.21.33.132</DestinationIp> 
+    </NetworkConnect>
+
+    <FileCreate onmatch="include">
+      <TargetFilename condition="begin with">/tmp/</TargetFilename>
+      <TargetFilename condition="begin with">/dev/shm/</TargetFilename>
+      <TargetFilename condition="begin with">/etc/</TargetFilename>
+      <TargetFilename condition="begin with">/root/</TargetFilename>
+    </FileCreate>
+
+    <FileDelete onmatch="include">
+      <TargetFilename condition="begin with">/var/log/</TargetFilename>
+      <TargetFilename condition="begin with">/etc/</TargetFilename>
+    </FileDelete>
+
+  </EventFiltering>
+</Sysmon>
